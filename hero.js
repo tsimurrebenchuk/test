@@ -9,13 +9,18 @@ const isHeroMobile = window.innerWidth < 768;
 const dpr = window.devicePixelRatio || 1;
 
 const setCanvasSize = () => {
+    const dpr = window.devicePixelRatio || 1;
     const isHeroMobile = window.innerWidth < 768;
-    const baseWidth = isHeroMobile ? 640 : 1920;
-    const baseHeight = isHeroMobile ? 360 : 1080;
+    const baseWidth = isHeroMobile ? window.innerWidth : 1920;
+    const baseHeight = isHeroMobile ? Math.round(baseWidth * 16 / 9) : 1080;
 
     canvas.width = baseWidth * dpr;
     canvas.height = baseHeight * dpr;
 
+    canvas.style.width = baseWidth + 'px';
+    canvas.style.height = baseHeight + 'px';
+
+    ctx.setTransform(1, 0, 0, 1, 0, 0); // сброс масштаба, на случай повторных вызовов
     ctx.scale(dpr, dpr);
 };
 
@@ -390,3 +395,23 @@ function changeActiveAvatar(fragment, direction = 1) {
         y: fragment.avatarIndex * -20,
     })
 }
+
+function setAllBlocksInitialState() {
+    // UV
+    gsap.set(uvBlock, { opacity: 0 });
+    gsap.set(uvBlockTexts, { opacity: 0 });
+
+    // описание/аватары
+    gsap.set(avatars, { opacity: 0 });
+    gsap.set(avatarDescription, { opacity: 0 });
+    gsap.set(avatarDescriptionTexts, { opacity: 0 });
+    gsap.set(avatarDescriptionButton, { opacity: 0 });
+
+    // history-блок
+    gsap.set(historyBlock, { opacity: 0 });
+    gsap.set(historyBlockTexts, { opacity: 0 });
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+    setAllBlocksInitialState();
+});

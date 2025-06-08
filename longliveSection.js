@@ -1,7 +1,7 @@
 gsap.registerPlugin(ScrollTrigger);
 
 ScrollTrigger.config({
-    autoRefreshEvents: "visibilitychange,DOMContentLoaded,load"
+    autoRefreshEvents: "DOMContentLoaded"
 });
 
 const blocks = gsap.utils.toArray(".block");
@@ -41,3 +41,7 @@ ScrollTrigger.create({
         });
     }
 });
+
+document.addEventListener("DOMContentLoaded", () => {
+
+})

@@ -582,31 +582,45 @@
     </div>
 
     <!-- GSAP и ScrollTrigger -->
-    <script src="https://unpkg.com/gsap@3/dist/gsap.min.js"></script>
-    <script src="https://unpkg.com/gsap@3/dist/ScrollTrigger.min.js"></script>
-    <script src="https://unpkg.com/gsap@3/dist/ScrollToPlugin.min.js"></script>
+    <script defer src="https://unpkg.com/gsap@3/dist/gsap.min.js"></script>
+    <script defer src="https://unpkg.com/gsap@3/dist/ScrollTrigger.min.js"></script>
+    <script defer src="https://unpkg.com/gsap@3/dist/ScrollToPlugin.min.js"></script>
 
     <!-- Загрузка swiper для локалки -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
-    <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
 
-    <script src="hero.js" async></script>
+    <script defer src="hero.js"></script>
 
-    <script src="longliveSection.js"></script>
+    <script defer src="longliveSection.js"></script>
 
-    <script src="oilSection.js" async></script>
+    <script defer src="oilSection.js"></script>
 
-    <script src="advantages.js" async></script>
+    <script defer src="advantages.js"></script>
 
-    <script src="slider.js" async></script>
+    <script defer src="slider.js"></script>
 
-    <script>
+    <script defer>
         window.addEventListener("load", () => {
-            window.scrollTo({
-                top: 0,
-            });
             ScrollTrigger.refresh()
         }, { once: true });
+
+        function debounce(fn, delay) {
+            let timer = null;
+            return function (...args) {
+                clearTimeout(timer);
+                timer = setTimeout(() => {
+                    fn.apply(this, args);
+                }, delay);
+            };
+        }
+
+        function onResize() {
+            ScrollTrigger.refresh();
+        }
+
+        const debouncedOnResize = debounce(onResize, 300);
+        window.addEventListener('resize', debouncedOnResize);
     </script>
 </body>
 
