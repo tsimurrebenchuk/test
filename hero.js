@@ -8,9 +8,6 @@ const setCanvasSize = () => {
     const baseWidth = window.innerWidth;
     const baseHeight = isHeroMobile ? Math.round(baseWidth * 1600 / 720) : Math.round(baseWidth * 9 / 16);
 
-    console.log('baseWidth', baseWidth)
-    console.log('baseHeight', baseHeight)
-
     canvas.width = baseWidth;
     canvas.height = baseHeight;
 
@@ -75,7 +72,6 @@ const uvBlockTexts = uvBlock.querySelectorAll(".line");
 gsap.set(uvBlockTexts, { yPercent: 100, });
 function uvProtectionBlockAnimate() {
     const enterTl = gsap.timeline({ paused: true });
-    const leaveTl = gsap.timeline({ paused: true });
 
     enterTl.to(mainBlock, {
         opacity: 0,
@@ -84,16 +80,14 @@ function uvProtectionBlockAnimate() {
 
     revealBlock(enterTl, uvBlock, uvBlockTexts, 0);
 
-    leaveTl.to(uvBlock, {
+    enterTl.to({}, { duration: 0.5 });
+
+    enterTl.to(uvBlock, {
         opacity: 0,
         duration: DURATION_SPEED
     })
 
-
-    return {
-        onEnter: () => enterTl.restart(),
-        onLeave: () => leaveTl.restart(),
-    }
+    return enterTl
 }
 
 function mainBlockAnimate() {
@@ -109,18 +103,38 @@ function mainBlockAnimate() {
         duration: DURATION_SPEED
     }, "=")
 
-    return {
-        onEnter: () => enterTl.restart()
-    }
+    return enterTl;
 }
 
 // description-block-animation
+const avatarInfo = [
+    {
+        avatarIndex: 0,
+        text: 'Фермерская линейка масла — Voutaktakis.',
+        link: 'https://greeklegend.ru/olive-oil/premium_voutaktakis/',
+    },
+    {
+        avatarIndex: 1,
+        text: 'Фермерская линейка масла — Papadakis.',
+        link: 'https://greeklegend.ru/olive-oil/premium_papadakis/'
+    },
+    {
+        avatarIndex: 2,
+        text: 'Фермерская линейка масла — Chatzigiorgis.',
+        link: 'https://greeklegend.ru/olive-oil/premium_chatzigiorgis/'
+    }
+]
+
 const avatars = document.querySelector('.avatars');
 const avatarPeople = avatars.querySelectorAll('.avatars__people');
 
 const avatarDescription = document.querySelector('.description');
 const avatarDescriptionContainer = avatarDescription.querySelectorAll('[data-wrapper]');
 const avatarDescriptionButton = avatarDescription.querySelector('button');
+
+const descriptionText = avatarDescription.querySelector(".description__text");
+const descriptionStepNumber = avatarDescription.querySelectorAll(".description__step-numbers");
+const descriptionStepLink = avatarDescription.querySelector(".description__link")
 
 wrapLines(avatarDescriptionContainer)
 const avatarDescriptionTexts = avatarDescription.querySelectorAll(".line")
@@ -129,9 +143,7 @@ gsap.set(avatarDescriptionTexts, { yPercent: 110, });
 gsap.set(avatarDescriptionButton, { opacity: 0 });
 function descriptionBlockAnimate() {
     const enterTl = gsap.timeline({ paused: true });
-    const leaveTl = gsap.timeline({ paused: true });
 
-    // enter animation
     enterTl.to(avatars, {
         opacity: 1,
         duration: DURATION_SPEED
@@ -144,21 +156,50 @@ function descriptionBlockAnimate() {
         duration: DURATION_SPEED
     }, ">");
 
-    // leave animation
-    leaveTl.to(avatars, {
-        opacity: 0,
-        duration: DURATION_SPEED
-    }, "=");
+    enterTl.to({}, { duration: 0.5 });
 
-    leaveTl.to(avatarDescription, {
+    enterTl.add(() => {
+        descriptionText.textContent = avatarInfo[0].text;
+        descriptionStepLink.href = avatarInfo[0].link;
+    });
+
+    enterTl.set(avatarPeople[0], { className: "avatars__people" });
+    enterTl.set(avatarPeople[1], { className: "avatars__people active" });
+    enterTl.add(() => {
+        descriptionText.textContent = avatarInfo[1].text;
+        descriptionStepLink.href = avatarInfo[1].link;
+    });
+
+    enterTl.to(descriptionStepNumber, {
+        y: 1 * -20,
+    });
+
+    enterTl.to({}, { duration: 0.5 });
+
+    enterTl.set(avatarPeople[1], { className: "avatars__people" });
+    enterTl.set(avatarPeople[2], { className: "avatars__people active" });
+    enterTl.add(() => {
+        descriptionText.textContent = avatarInfo[2].text;
+        descriptionStepLink.href = avatarInfo[2].link;
+    });
+
+    enterTl.to(descriptionStepNumber, {
+        y: 2 * -20,
+    });
+
+    enterTl.to({}, { duration: 0.5 });
+
+    enterTl.to(avatars, {
         opacity: 0,
         duration: DURATION_SPEED
     });
 
-    return {
-        onEnter: () => enterTl.restart(),
-        onLeave: () => leaveTl.restart()
-    };
+    enterTl.to(avatarDescription, {
+        opacity: 0,
+        duration: DURATION_SPEED
+    });
+
+    return enterTl;
 }
 
 // history-block-animation
@@ -171,75 +212,58 @@ gsap.set(historyBlockTexts, { yPercent: 100 });
 const mouseContainer = document.querySelector('.mouse-container--last');
 function historyBlockAnimate() {
     const enterTl = gsap.timeline({ paused: true });
-    const leaveTl = gsap.timeline({ paused: true });
 
     revealBlock(enterTl, historyBlock, historyBlockTexts, 0);
 
-    leaveTl.to(historyBlock, {
+    enterTl.to({}, { duration: 0.5 });
+
+    enterTl.to(historyBlock, {
         opacity: 0,
         duration: DURATION_SPEED
     })
 
-    leaveTl.to(mouseContainer, {
+    enterTl.to(mouseContainer, {
         opacity: 1,
         duration: DURATION_SPEED
     })
 
-    return {
-        onEnter: () => enterTl.restart(),
-        onLeave: () => leaveTl.restart()
-    }
+    return enterTl;
+}
+
+function changeActiveAvatar(fragment) {
+    if (fragment?.avatarIndex === undefined) return;
+
+    avatarPeople.forEach(avatar => avatar.classList.remove('active'));
+    avatarPeople[fragment.avatarIndex].classList.add('active');
+
+    descriptionText.textContent = fragment.text;
+    descriptionStepLink.href = fragment.link;
+
+    gsap.to(descriptionStepNumber, {
+        y: fragment.avatarIndex * -20,
+    })
 }
 
 const fragments = [
+    // uvProtectionBlockAnimate
     {
         start: 0,
-        end: 0,
-    },
-    {
-        start: 0,
-        end: 49,
-        animationEnter: uvProtectionBlockAnimate().onEnter,
-        animationEnterBack: mainBlockAnimate().onEnter,
-    },
-    {
-        start: 49,
         end: 89,
-        avatarIndex: 0,
-        text: 'Фермерская линейка масла — Voutaktakis.',
-        link: 'https://greeklegend.ru/olive-oil/premium_voutaktakis/',
-        animationEnter: descriptionBlockAnimate().onEnter,
-        animationLeave: uvProtectionBlockAnimate().onLeave,
-        animationEnterBack: uvProtectionBlockAnimate().onEnter,
-        animationLeaveBack: descriptionBlockAnimate().onLeave,
     },
+    // descriptionBlockAnimate
     {
         start: 89,
-        end: 104,
-        avatarIndex: 1,
-        text: 'Фермерская линейка масла — Papadakis.',
-        link: 'https://greeklegend.ru/olive-oil/premium_papadakis/'
-    },
-    {
-        start: 104,
         end: 118,
-        avatarIndex: 2,
-        text: 'Фермерская линейка масла — Chatzigiorgis.',
-        link: 'https://greeklegend.ru/olive-oil/premium_chatzigiorgis/'
     },
+    // historyBlockAnimate
     {
         start: 118,
         end: 170,
-        animationEnter: historyBlockAnimate().onEnter,
-        animationLeave: descriptionBlockAnimate().onLeave,
-        animationEnterBack: descriptionBlockAnimate().onEnter,
-        animationLeaveBack: historyBlockAnimate().onLeave,
     },
+    // empty block
     {
         start: 170,
         end: 240,
-        animationLeave: historyBlockAnimate().onLeave,
-        animationLeaveBack: historyBlockAnimate().onEnter,
     },
 ];
 
@@ -305,12 +329,32 @@ if (isHeroMobile) {
 }
 
 function updateFrame(idx) {
+    if (!idx) return;
+
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.drawImage(frames[idx], 0, 0, canvas.width, canvas.height);
 }
 
 gsap.registerPlugin(ScrollTrigger);
-let currentIndex = 0;
+
+const sections = document.querySelectorAll('.section');
+const blockTls = [
+    { animation: uvProtectionBlockAnimate },
+    { animation: descriptionBlockAnimate },
+    { animation: historyBlockAnimate },
+    { animation: null }
+]
+
+// Для каждой секции готовим таймлайн-анимацию (paused!)
+const sectionTLS = Array.from(sections).map((section, i) => {
+    const fragment = fragments[i];
+
+    if (blockTls[i]?.animation) {
+        return blockTls[i]?.animation();
+    }
+
+    return gsap.timeline({ paused: true })
+});
 
 let isAnimationPlay = false;
 ScrollTrigger.create({
@@ -321,107 +365,70 @@ ScrollTrigger.create({
     scrub: true,
     pinSpacing: true,
     onUpdate: async self => {
-        if (!isPageLoad) return;
+        const progress = self.progress;
+        const frameIndex = Math.min(
+            totalFrames - 1,
+            Math.floor(self.progress * totalFrames)
+        );
 
-        const idx = Math.floor(self.progress * fragments.length);
+        updateFrame(frameIndex);
 
-        if (currentIndex !== idx && !isAnimationPlay) {
-            currentIndex = idx;
+        // 1. Находим активный фрагмент по frameIndex
+        let sectionIndex = fragments.findIndex(
+            f => frameIndex >= f.start && frameIndex <= f.end
+        );
+        if (sectionIndex === -1) return; // вне диапазонов
 
-            await playFrames(currentIndex, self.direction);
+        const fragment = fragments[sectionIndex];
+        // 2. Считаем локальный прогресс в секции:
+        const sectionProgress = (frameIndex - fragment.start) / (fragment.end - fragment.start || 1); // деление на 0 не прокатит
 
-            unlockScroll();
-            isAnimationPlay = false;
-        }
+        // 4. Ходим по всем таймлайнам секций (sectionTLS на том же индексе что и fragment)
+        sectionTLS.forEach((tl, i) => {
+            tl.pause();
+            if (i < sectionIndex) {
+                tl.progress(1);       // проиграно полностью, если нужно
+            } else if (i === sectionIndex) {
+                tl.progress(sectionProgress); // синхронно со скроллом
+            } else {
+                tl.progress(0);      // ещё не началось
+            }
+        });
     },
 });
 
-let animationFrameId;
-async function playFrames(index, direction) {
-    if (!(fragments.length - 1 === index)) {
-        lockScroll();
-        isAnimationPlay = true;
-        const scrollY = window.scrollY || window.pageYOffset;
-        document.body.dataset.scrollY = scrollY;
-    }
-
-    const playForward = direction === 1;
-    const playReverse = direction === -1;
-
-    const enterBackFrameOffset = index === fragments.length ? index : index + 1;
-    let startFrame, endFrame;
-
-    if (playForward) {
-        if (!fragments[index]) {
-            return
-        };
-
-        startFrame = fragments[index].start;
-        endFrame = fragments[index].end;
-    }
-
-    if (playReverse) {
-        if (!fragments[enterBackFrameOffset]) {
-            return
-        };
-
-        endFrame = fragments[enterBackFrameOffset].start;
-        startFrame = fragments[enterBackFrameOffset].end;
-    }
-
-    let frameIndex = startFrame;
-    const stopFrame = endFrame;
-
-    animate();
-    function animate(timestamp) {
-        direction === 1 ? frameIndex++ : frameIndex--;
-        window.scrollTo(0, scrollY);
-        updateFrame(frameIndex);
-
-        if (frameIndex === stopFrame) {
-            cancelAnimationFrame(animationFrameId);
-            return;
-        }
-
-        animationFrameId = requestAnimationFrame(animate);
-    }
-
-    if (playForward) {
-        changeActiveAvatar(fragments[index]);
-
-        if (fragments[index]?.animationLeave) await fragments[index].animationLeave();
-        if (fragments[index]?.animationEnter) await fragments[index].animationEnter();
-    }
-
-    if (playReverse) {
-        changeActiveAvatar(fragments[index]);
-
-        if (fragments[enterBackFrameOffset]?.animationLeaveBack) await fragments[enterBackFrameOffset].animationLeaveBack();
-        if (fragments[enterBackFrameOffset]?.animationEnterBack) await fragments[enterBackFrameOffset].animationEnterBack();
-    }
-
+const progressNames = {
+    progress: 'Прогресс: ',
+    frameIndex: 'Индекс фрейма: ',
+    sectionIndex: 'Section Index:',
+    sectionProgress: 'Section Progress',
+    fragmentIndex: 'Индекс фрагмента: ',
+    currentIndex: 'Текущий индекс фрагмента: ',
+    direction: 'Направление: '
+}
+const progressEl = document.getElementById('progress-value');
+function progressBlockValues(values) {
+    progressEl.textContent = Object.entries(values)
+        .map(([key, value]) => `${progressNames[key]}: ${value}`)
+        .join(';\n');
 }
 
-const descriptionText = avatarDescription.querySelector(".description__text");
-const descriptionStepNumber = avatarDescription.querySelectorAll(".description__step-numbers");
-const descriptionStepLink = avatarDescription.querySelector(".description__link")
-function changeActiveAvatar(fragment) {
-    if (fragment?.avatarIndex === undefined) return;
-
-    avatarPeople.forEach(avatar => avatar.classList.remove('active'));
-    avatarPeople[fragment.avatarIndex].classList.add('active');
-
-    descriptionText.textContent = fragment.text;
-    descriptionStepLink.href = fragment.link;
-
-    gsap.to(descriptionStepNumber, {
-        y: fragment.avatarIndex * -20,
-    })
-}
-
+// EventListener
 document.addEventListener("DOMContentLoaded", () => {
     setCanvasSize();
 }, { once: true });
+
+window.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible") {
+        ScrollTrigger.refresh(true); // true - форсить пересчёт размеров/пинов
+        ScrollTrigger.update();
+    }
+});
+
+window.addEventListener('resize', () => {
+    ScrollTrigger.refresh();
+    ScrollTrigger.update();
+});
 
 // ==== Scroll Lock ====
 function lockScroll() {
