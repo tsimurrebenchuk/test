@@ -3,6 +3,8 @@ frames/
 test.js
 index.php
 .idea/
+.vscode/
+node_modules/
 styleForTest.scss
 refactoring.js
 imageCanvasType.js
