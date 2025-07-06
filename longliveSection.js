@@ -1,9 +1,3 @@
-gsap.registerPlugin(ScrollTrigger);
-
-ScrollTrigger.config({
-    autoRefreshEvents: "DOMContentLoaded"
-});
-
 const blocks = gsap.utils.toArray(".block");
 const container = document.querySelector("#longliveBlock");
 const numBlocks = blocks.length;
@@ -18,11 +12,11 @@ blocks.forEach((block, i) => {
 
 ScrollTrigger.create({
     trigger: container,
-    start: `${window.innerHeight / 2} center`,
-    end: "+=" + (numBlocks * window.innerHeight) + " center",
+    start: 'center center',
+    end: `+=${numBlocks * 100}%`,
     pin: true,
     scrub: true,
-    // markers: true,
+    pinSpacing: true,
     onUpdate: self => {
         const progress = self.progress; // от 0 до 1
         const activeIndex = Math.floor(progress * numBlocks);
@@ -41,7 +35,3 @@ ScrollTrigger.create({
         });
     }
 });
-
-document.addEventListener("DOMContentLoaded", () => {
-
-})

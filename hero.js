@@ -1,46 +1,30 @@
+// ==== Canvas Setup ====
 const canvas = document.getElementById("video-frame");
 const ctx = canvas.getContext("2d");
 
-const isHeroMobile = window.innerWidth < 768;
-// const baseWidth = isHeroMobile ? 640 : 1920;
-// const baseHeight = isHeroMobile ? 360 : 1080;
-
-// ===============
-const dpr = window.devicePixelRatio || 1;
+const isHeroMobile = window.innerWidth < 1024;
 
 const setCanvasSize = () => {
-    const dpr = window.devicePixelRatio || 1;
-    const isHeroMobile = window.innerWidth < 768;
-    const baseWidth = isHeroMobile ? window.innerWidth : 1920;
-    const baseHeight = isHeroMobile ? Math.round(baseWidth * 16 / 9) : 1080;
+    const baseWidth = window.innerWidth;
+    const baseHeight = isHeroMobile ? Math.round(baseWidth * 1600 / 720) : Math.round(baseWidth * 9 / 16);
 
-    canvas.width = baseWidth * dpr;
-    canvas.height = baseHeight * dpr;
+    console.log('baseWidth', baseWidth)
+    console.log('baseHeight', baseHeight)
+
+    canvas.width = baseWidth;
+    canvas.height = baseHeight;
 
     canvas.style.width = baseWidth + 'px';
     canvas.style.height = baseHeight + 'px';
 
-    ctx.setTransform(1, 0, 0, 1, 0, 0); // сброс масштаба, на случай повторных вызовов
-    ctx.scale(dpr, dpr);
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
 };
 
-// Вызываем при инициализации и ресайзе
-setCanvasSize();
-//=================
-
+// ==== Utils ====
 const frameSlider = document.getElementById("frame-slider");
 const currentFrameDisplay = document.getElementById("current-frame");
 
 const DURATION_SPEED = 0.2;
-
-let isPageLoad = false;
-
-let currentFrame = 0;
-const startFrame = 0;
-const totalFrames = 240;
-
-const FPS = 60;
-let direction = 1; // 1 — вперёд, -1 — назад
 
 // utils для оборачивания в span class="line"
 function wrapLines(spanLines) {
@@ -63,8 +47,7 @@ function wrapLines(spanLines) {
     })
 }
 
-// ANIMATIONS
-// utils
+// block reveal
 function revealBlock(timeline, blockElement, spanElements, stagger = 0.2) {
     timeline.to(blockElement, {
         opacity: 1,
@@ -79,6 +62,7 @@ function revealBlock(timeline, blockElement, spanElements, stagger = 0.2) {
     }, ">");
 }
 
+// ==== ANIMATIONS====
 // main-block
 const mainBlock = document.querySelector('.main-content');
 
@@ -177,7 +161,6 @@ function descriptionBlockAnimate() {
     };
 }
 
-
 // history-block-animation
 const historyBlock = document.querySelector('.history');
 const historyBlockContainer = historyBlock.querySelectorAll('span');
@@ -185,6 +168,7 @@ const historyTextContainer = historyBlock.querySelectorAll('span');
 wrapLines(historyBlockContainer)
 const historyBlockTexts = historyBlock.querySelectorAll(".line");
 gsap.set(historyBlockTexts, { yPercent: 100 });
+const mouseContainer = document.querySelector('.mouse-container--last');
 function historyBlockAnimate() {
     const enterTl = gsap.timeline({ paused: true });
     const leaveTl = gsap.timeline({ paused: true });
@@ -196,6 +180,11 @@ function historyBlockAnimate() {
         duration: DURATION_SPEED
     })
 
+    leaveTl.to(mouseContainer, {
+        opacity: 1,
+        duration: DURATION_SPEED
+    })
+
     return {
         onEnter: () => enterTl.restart(),
         onLeave: () => leaveTl.restart()
@@ -203,6 +192,10 @@ function historyBlockAnimate() {
 }
 
 const fragments = [
+    {
+        start: 0,
+        end: 0,
+    },
     {
         start: 0,
         end: 49,
@@ -250,140 +243,170 @@ const fragments = [
     },
 ];
 
+// ==== Bottle Block ====
+let currentFrame = 0;
+const initialFrame = 0;
+const totalFrames = 241;
+
 // const imagesSrcPath = isHeroMobile ? '../local/templates/greek/img/components/premium/heroMob' : '../local/templates/greek/img/components/premium/hero';
-const imagesSrcPath = isHeroMobile ? 'heroMob' : 'hero';
+const imagesSrcPath = isHeroMobile ? 'heroMob' : 'hero1980';
+let isPageLoad = false;
 const frames = [];
-async function preloadFrames() {
-    const promises = [];
+let loaded = 0;
 
-    for (let i = 0; i < totalFrames; i++) {
-        const path = `${imagesSrcPath}/${i.toString().padStart(4, "0")}.webp`;
-        const img = fetch(path)
-            .then(res => res.blob())
-            .then(blob => createImageBitmap(blob));
-        promises.push(img);
+// загрузка картинок отличается в зависимости от устройства
+if (isHeroMobile) {
+    function loadImage() {
+        for (let i = initialFrame; i < totalFrames; i++) {
+            const img = new Image();
+            img.src = `/${imagesSrcPath}/${String(i).padStart(4, 0)}.webp`;
+            img.onload = () => {
+                loaded++;
+                if (loaded === totalFrames) updateFrame(0);
+            };
+            frames.push(img);
+        }
+        console.log("%cВсе кадры загружены", "color: green; font-weight: bold;");
+        isPageLoad = true;
     }
+    loadImage()
+} else {
+    async function preloadFrames(batchSize = 60) {
+        lockScroll();
+        try {
+            for (let i = 0; i < totalFrames; i += batchSize) {
+                const batch = [];
 
-    const loadedFrames = await Promise.all(promises);
-    for (let i = 0; i < totalFrames; i++) {
-        frames[i] = loadedFrames[i];
+                for (let j = i; j < i + batchSize && j < totalFrames; j++) {
+                    const path = `${imagesSrcPath}/${j.toString().padStart(4, "0")}.webp`;
+                    const img = fetch(path)
+                        .then(res => res.blob())
+                        .then(blob => createImageBitmap(blob));
+                    batch.push(img);
+                }
+
+                const loadedFrames = await Promise.all(batch);
+
+                for (let j = 0; j < loadedFrames.length; j++) {
+                    frames[i + j] = loadedFrames[j];
+                }
+
+                if (frames.length > batchSize && !isPageLoad) {
+                    isPageLoad = true;
+                    unlockScroll();
+                    updateFrame(0);
+                }
+            }
+        } catch (e) {
+            console.error("Ошибка preloadFrames: " + e);
+        }
     }
-
-    console.log("Все кадры загружены");
-    isPageLoad = true;
-    updateFrame();
+    preloadFrames()
 }
 
-preloadFrames()
-
-function updateFrame() {
+function updateFrame(idx) {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.drawImage(frames[currentFrame], 0, 0, canvas.width / dpr, canvas.height / dpr);
+    ctx.drawImage(frames[idx], 0, 0, canvas.width, canvas.height);
 }
+
+gsap.registerPlugin(ScrollTrigger);
+let currentIndex = 0;
+
+let isAnimationPlay = false;
+ScrollTrigger.create({
+    trigger: ".video-wrapper",
+    start: "top top",
+    end: `+=${fragments.length * (isHeroMobile ? 130 : 80)}%`,
+    pin: true,
+    scrub: true,
+    pinSpacing: true,
+    onUpdate: async self => {
+        if (!isPageLoad) return;
+
+        const idx = Math.floor(self.progress * fragments.length);
+
+        if (currentIndex !== idx && !isAnimationPlay) {
+            currentIndex = idx;
+
+            await playFrames(currentIndex, self.direction);
+
+            unlockScroll();
+            isAnimationPlay = false;
+        }
+    },
+});
 
 let animationFrameId;
+async function playFrames(index, direction) {
+    if (!(fragments.length - 1 === index)) {
+        lockScroll();
+        isAnimationPlay = true;
+        const scrollY = window.scrollY || window.pageYOffset;
+        document.body.dataset.scrollY = scrollY;
+    }
 
-function play(index) {
-    if (!isPageLoad) return;
+    const playForward = direction === 1;
+    const playReverse = direction === -1;
 
-    cancelAnimationFrame(animationFrameId);
+    const enterBackFrameOffset = index === fragments.length ? index : index + 1;
+    let startFrame, endFrame;
 
-    const fragment = fragments[index];
-    let lastTimestamp = 0;
+    if (playForward) {
+        if (!fragments[index]) {
+            return
+        };
 
+        startFrame = fragments[index].start;
+        endFrame = fragments[index].end;
+    }
+
+    if (playReverse) {
+        if (!fragments[enterBackFrameOffset]) {
+            return
+        };
+
+        endFrame = fragments[enterBackFrameOffset].start;
+        startFrame = fragments[enterBackFrameOffset].end;
+    }
+
+    let frameIndex = startFrame;
+    const stopFrame = endFrame;
+
+    animate();
     function animate(timestamp) {
-        if (!lastTimestamp) lastTimestamp = timestamp;
-        const deltaTime = timestamp - lastTimestamp;
+        direction === 1 ? frameIndex++ : frameIndex--;
+        window.scrollTo(0, scrollY);
+        updateFrame(frameIndex);
 
-        if (deltaTime >= (1000 / FPS)) {
-            lastTimestamp = timestamp;
-            currentFrame += direction;
-
-            if (direction === 1 && currentFrame >= fragment.end) {
-                currentFrame = fragment.end;
-                pause();
-                unlockScroll();
-                return;
-            } else if (direction === -1 && currentFrame <= fragment.start) {
-                currentFrame = fragment.start;
-                pause();
-                unlockScroll();
-                return;
-            }
-
-            updateFrame();
+        if (frameIndex === stopFrame) {
+            cancelAnimationFrame(animationFrameId);
+            return;
         }
 
         animationFrameId = requestAnimationFrame(animate);
     }
 
-    animationFrameId = requestAnimationFrame(animate);
-}
+    if (playForward) {
+        changeActiveAvatar(fragments[index]);
 
-function pause() {
-    cancelAnimationFrame(animationFrameId);
-}
-
-
-async function playForward(index) {
-    if (index < fragments.length - 1) {
-        lockScroll();
+        if (fragments[index]?.animationLeave) await fragments[index].animationLeave();
+        if (fragments[index]?.animationEnter) await fragments[index].animationEnter();
     }
 
-    direction = 1;
-    currentFrame = fragments[index].start;
+    if (playReverse) {
+        changeActiveAvatar(fragments[index]);
 
-    changeActiveAvatar(fragments[index]);
-    play(index);
+        if (fragments[enterBackFrameOffset]?.animationLeaveBack) await fragments[enterBackFrameOffset].animationLeaveBack();
+        if (fragments[enterBackFrameOffset]?.animationEnterBack) await fragments[enterBackFrameOffset].animationEnterBack();
+    }
 
-    if (fragments[index]?.animationLeave) await fragments[index].animationLeave();
-    if (fragments[index]?.animationEnter) await fragments[index].animationEnter();
 }
-
-async function playBackward(index) {
-    lockScroll();
-
-    direction = -1;
-    currentFrame = fragments[index].end;
-
-    changeActiveAvatar(fragments[index - 1], direction);
-    play(index);
-
-    if (fragments[index]?.animationLeaveBack) await fragments[index].animationLeaveBack();
-    if (fragments[index]?.animationEnterBack) await fragments[index].animationEnterBack();
-}
-
-function lockScroll() {
-    document.body.style.overflow = "hidden";
-}
-
-function unlockScroll() {
-    document.body.style.overflow = "auto";
-}
-
-gsap.registerPlugin(ScrollTrigger, ScrollToPlugin);
-
-// Отключить автообновление ScrollTrigger
-ScrollTrigger.config({
-    autoRefreshEvents: "visibilitychange,DOMContentLoaded,load"
-});
-
-document.querySelectorAll(".step").forEach((step, index) => {
-    ScrollTrigger.create({
-        trigger: step,
-        start: "top center",
-        end: "top center",
-        onEnter: () => { if (isPageLoad) playForward(index) },
-        onEnterBack: () => { if (isPageLoad) playBackward(index) },
-        // markers: true
-    });
-});
 
 const descriptionText = avatarDescription.querySelector(".description__text");
 const descriptionStepNumber = avatarDescription.querySelectorAll(".description__step-numbers");
 const descriptionStepLink = avatarDescription.querySelector(".description__link")
-function changeActiveAvatar(fragment, direction = 1) {
-    if (fragment?.avatarIndex === undefined || (fragment.avatarIndex === 0 && direction === 1)) return;
+function changeActiveAvatar(fragment) {
+    if (fragment?.avatarIndex === undefined) return;
 
     avatarPeople.forEach(avatar => avatar.classList.remove('active'));
     avatarPeople[fragment.avatarIndex].classList.add('active');
@@ -396,22 +419,16 @@ function changeActiveAvatar(fragment, direction = 1) {
     })
 }
 
-function setAllBlocksInitialState() {
-    // UV
-    gsap.set(uvBlock, { opacity: 0 });
-    gsap.set(uvBlockTexts, { opacity: 0 });
+document.addEventListener("DOMContentLoaded", () => {
+    setCanvasSize();
+}, { once: true });
 
-    // описание/аватары
-    gsap.set(avatars, { opacity: 0 });
-    gsap.set(avatarDescription, { opacity: 0 });
-    gsap.set(avatarDescriptionTexts, { opacity: 0 });
-    gsap.set(avatarDescriptionButton, { opacity: 0 });
-
-    // history-блок
-    gsap.set(historyBlock, { opacity: 0 });
-    gsap.set(historyBlockTexts, { opacity: 0 });
+// ==== Scroll Lock ====
+function lockScroll() {
+    bodyScrollLock.disableBodyScroll(document.body);
 }
 
-document.addEventListener("DOMContentLoaded", () => {
-    setAllBlocksInitialState();
-});
+function unlockScroll() {
+    bodyScrollLock.enableBodyScroll(document.body);
+    document.body.style.overflowX = 'hidden';
+}

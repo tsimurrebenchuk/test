@@ -42,6 +42,8 @@ $arno-font: "ArnoPro";
     background-color: rgba(245, 242, 240, 1);
     font-feature-settings: "ss03" 1;
 
+    overflow-x: hidden;
+
     &__subtitle {
         font-weight: inherit;
         font-style: italic;
@@ -95,47 +97,27 @@ $arno-font: "ArnoPro";
 }
 
 .premium__hero {
-    display: block;
     background-color: black;
+    overflow-x: hidden;
+    margin-top: -48px;
 
-    position: sticky;
-    top: 48px;
-    z-index: 1;
-    margin-top: -48px; // fix битриксового паддинга
+    .video-wrapper {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+
+        @include device(tablet) {
+            canvas {
+                transform: scale(1.35);
+            }
+        }
+    }
 
     @include device(tablet) {
         br {
             display: none;
         }
-    }
-
-    canvas {
-        width: 100vw;
-        height: 100vh;
-        display: block;
-        image-rendering: crisp-edges;
-        object-fit: contain;
-
-        @include device(tablet) {
-            object-fit: unset;
-        }
-    }
-
-
-    .step {
-        height: 100vh;
-        background-color: black;
-    }
-
-    .video-wrapper {
-        position: sticky;
-        inset: 0;
-        z-index: 1;
-
-        height: calc(100dvh - 48px);
-        width: 100%;
-
-        overflow: hidden;
     }
 
     .avatars {
@@ -192,7 +174,7 @@ $arno-font: "ArnoPro";
     .uv-protection,
     .history {
         position: absolute;
-        top: 24px;
+        top: 72px;
         left: 24px;
         z-index: 2;
 
@@ -261,7 +243,7 @@ $arno-font: "ArnoPro";
 
         &__reward {
             position: absolute;
-            bottom: 48px;
+            bottom: 80px;
 
             display: grid;
             gap: 16px;
@@ -274,6 +256,7 @@ $arno-font: "ArnoPro";
 
             @include device(tablet) {
                 width: auto;
+                bottom: 48px;
             }
 
             .reward {
@@ -349,6 +332,12 @@ $arno-font: "ArnoPro";
         .mouse-container {
             position: absolute;
             top: 110px;
+
+            &--last {
+                top: unset;
+                bottom: 160px;
+                opacity: 0;
+            }
         }
 
         .mouse {
@@ -780,7 +769,7 @@ p {
 
 
 .oil-facts-section {
-    height: 100dvh;
+    height: 100vh;
     height: 100vh;
     padding: 7.2rem 2.4rem 2.4rem;
 

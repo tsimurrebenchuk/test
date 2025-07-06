@@ -1,0 +1,23 @@
+{
+  "name": "forlocalgreeklegend",
+  "version": "1.0.0",
+  "description": "",
+  "homepage": "https://github.com/Popenkovskyi/forLocalGreekLegend#readme",
+  "bugs": {
+    "url": "https://github.com/Popenkovskyi/forLocalGreekLegend/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Popenkovskyi/forLocalGreekLegend.git"
+  },
+  "license": "ISC",
+  "author": "",
+  "type": "commonjs",
+  "main": "advantages.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "sharp": "^0.34.2"
+  }
+}

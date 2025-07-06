@@ -1,5 +1,3 @@
-gsap.registerPlugin(ScrollTrigger);
-
 const oilTitle = document.querySelector('.oil-facts-section .title');
 const oilTitleText = [
     [
