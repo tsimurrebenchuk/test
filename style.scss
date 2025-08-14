@@ -202,7 +202,7 @@ $arno-font: "ArnoPro";
         position: absolute;
         inset: 0;
         color: white;
-        z-index: -1;
+        z-index: 0;
 
         display: flex;
         align-items: center;
@@ -689,6 +689,38 @@ $arno-font: "ArnoPro";
             width: 100%;
             border-radius: 2.2rem;
         }
+    }
+}
+
+.premium__bottle-cap {
+    position: relative;
+
+    .bottle-cap-description {
+        position: absolute;
+        top: 2.4rem;
+        left: 2.4rem;
+        z-index: 2;
+
+        display: flex;
+        flex-direction: column;
+        gap: 32px;
+
+        width: 608px;
+        padding: 24px 45px 32px 24px;
+        background: rgba(245, 242, 240, .15);
+        border-radius: 18px;
+        color: white;
+
+        @include device(tablet) {
+            width: auto;
+            top: 16px;
+            left: 16px;
+            right: 16px;
+        }
+    }
+
+    video {
+        width: 100%;
     }
 }
 
