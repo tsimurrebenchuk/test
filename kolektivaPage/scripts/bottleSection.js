@@ -1,32 +1,44 @@
 const VITAMINS = [
-    { name: 'Лигстразид', value: '', size: 'sm', top: -370, left: 461, depth: 1 },
-    { name: 'Витамин А', value: '', size: 'md', top: -236, left: 311, depth: 2 },
-    { name: 'Витамин K', value: '', size: 'md', top: -216, left: -307, depth: 1 },
-    { name: 'Антивозрастной антиоксидант', value: '', size: 'md', top: -354, left: -436, depth: 2 },
-    { name: 'Гидрокситирозол', value: '', size: 'xl', top: -34, left: -750, depth: 1 },
-    { name: 'тирозол', value: '', size: 'xs', left: 632, top: 133, depth: 1 },
-    { name: 'Витамин Е', value: '', size: 'lg', top: -41, left: 474, depth: 4 },
-    { name: 'Олеуропеин', value: '', size: 'lg', top: -137, left: 710, depth: 3 },
-    { name: 'Витамины группы B (B1, B2, B6)', value: '', size: 'xxl', top: 320, left: -631, depth: 2 },
-    { name: 'Витамин C', value: '', size: 'md', top: 286, left: 830, depth: 2 },
-    { name: 'Витамин D', value: '', size: 'md', top: 458, left: 435, depth: 2 },
+    { hoverText: 'Антивозрастной<br> антиоксидант', name: 'Лигстразид', value: '', size: 'sm', top: -370, left: 461, depth: 1 },
+    { hoverText: 'Антивозрастной<br> антиоксидант', name: 'Витамин А', value: '', size: 'md', top: -236, left: 311, depth: 2 },
+    { hoverText: 'Антивозрастной<br> антиоксидант', name: 'Витамин K', value: '', size: 'md', top: -216, left: -307, depth: 1 },
+    { hoverText: 'Антивозрастной<br> антиоксидант', name: 'Витамин P', value: '', size: 'md', top: -354, left: -436, depth: 2 },
+    { hoverText: 'Антивозрастной<br> антиоксидант', name: 'Гидрокситирозол', value: '', size: 'xl', top: -34, left: -750, depth: 1 },
+    { hoverText: 'Антивозрастной<br> антиоксидант', name: 'тирозол', value: '', size: 'xs', left: 632, top: 133, depth: 1 },
+    { hoverText: 'Антивозрастной<br> антиоксидант', name: 'Витамин Е', value: '', size: 'lg', top: -41, left: 474, depth: 4 },
+    { hoverText: 'Антивозрастной<br> антиоксидант', name: 'Олеуропеин', value: '', size: 'lg', top: -137, left: 710, depth: 3 },
+    { hoverText: 'Антивозрастной<br> антиоксидант', name: 'Витамины группы B<br> (B1, B2, B6)', value: '', size: 'xxl', top: 320, left: -631, depth: 2 },
+    { hoverText: 'Антивозрастной<br> антиоксидант', name: 'Витамин C', value: '', size: 'md', top: 286, left: 830, depth: 2 },
+    { hoverText: 'Антивозрастной<br> антиоксидант', name: 'Витамин D', value: '', size: 'md', top: 458, left: 435, depth: 2 },
 ]
 
 const vitaminsContainer = document.querySelector('.vitamins__container');
 VITAMINS.forEach(vitamin => {
-    const div = document.createElement('div');
+    const node = document.createElement('node');
 
-    div.classList.add('parallax-item');
-    div.classList.add('bottle__vitamins');
-    div.classList.add(`bottle__vitamins--${vitamin.size}`);
-    div.textContent = vitamin.name;
+    node.classList.add('parallax-item');
 
-    div.dataset.depth = vitamin.depth;
+    node.classList.add('bottle__vitamins');
+    node.classList.add(`bottle__vitamins--${vitamin.size}`);
+    node.innerHTML = vitamin.name;
 
-    div.style.top = `${vitamin.top}px`;
-    div.style.left = `${vitamin.left}px`;
+    node.dataset.depth = vitamin.depth;
 
-    vitaminsContainer.appendChild(div);
+    node.style.top = `${vitamin.top}px`;
+    node.style.left = `${vitamin.left}px`;
+
+    let fadeTimeout;
+    node.addEventListener('mouseenter', () => {
+        clearTimeout(fadeTimeout);
+        node.innerHTML = vitamin.hoverText;
+    });
+
+    node.addEventListener('mouseleave', () => {
+        clearTimeout(fadeTimeout);
+        node.innerHTML = vitamin.name;
+    });
+
+    vitaminsContainer.appendChild(node);
 })
 
 const area = document.querySelector('.parallax-area');
