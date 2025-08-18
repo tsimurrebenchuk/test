@@ -33,11 +33,20 @@ img {
 
 body {
     background-color: $white;
+    overflow-x: hidden;
 }
 
 @mixin device($breakpoint) {
     @media only screen and (max-width: $tab-max-width) {
         @content;
+    }
+}
+
+@mixin inline-padding {
+    padding-inline: 2.4rem;
+
+    @include device(tablet) {
+        padding-inline: 1.6rem;
     }
 }
 
@@ -76,6 +85,10 @@ body {
         text-align: center;
         font-variant: all-small-caps;
         text-transform: uppercase;
+
+        @include device(tablet) {
+            font-size: 3.2rem;
+        }
     }
 
     @else if $size ==32 {
@@ -288,11 +301,21 @@ body {
 
 .grid {
     @include grid-column-24;
+
+    @include device(tablet) {
+        display: flex;
+        flex-direction: column;
+        gap: 2.4rem;
+    }
 }
 
 .section {
     &-space {
         padding-block: 20rem;
+
+        @include device(tablet) {
+            padding-block: 12rem 4rem;
+        }
     }
 
     &-title {
@@ -334,7 +357,12 @@ body {
 }
 
 .kolektiva {
-    padding: 0 2.4rem 20rem;
+    @include inline-padding;
+    margin-bottom: 20rem;
+
+    @include device(tablet) {
+        margin-bottom: 12rem;
+    }
 
     &__texts {
         grid-column: 19/25;
@@ -355,8 +383,16 @@ body {
 }
 
 .local {
-    padding-inline: 2.4rem;
-    padding-bottom: 23.7rem;
+    @include inline-padding;
+    padding-bottom: 20rem;
+
+    @include device(tablet) {
+        padding-bottom: 12rem;
+
+        .grid {
+            flex-direction: column-reverse;
+        }
+    }
 
     &__title {
         padding-bottom: 3.2rem;
@@ -370,6 +406,17 @@ body {
         display: grid;
         grid-template-columns: repeat(2, 1fr);
         gap: 2.4rem;
+
+        @include device(tablet) {
+            display: flex;
+            flex-direction: column;
+            padding-top: 0;
+            border: none;
+
+            br {
+                display: none;
+            }
+        }
 
         .text-caption {
             @include text-style(20);
@@ -385,6 +432,11 @@ body {
             inset: 0;
             display: grid;
             place-items: center;
+
+            @include device(tablet) {
+                position: relative;
+                margin-block: 4.6rem;
+            }
         }
     }
 
@@ -394,7 +446,7 @@ body {
 }
 
 .age {
-    padding-inline: 2.4rem;
+    @include inline-padding;
 
     .swiper-slide {
         width: 90rem;
@@ -454,6 +506,10 @@ body {
         transform: translate(-50%, -50%);
     }
 
+    &__hovered {
+        @include text-style(20-n-caps);
+    }
+
     &__vitamins {
         position: absolute;
         top: 0;
@@ -463,7 +519,9 @@ body {
         place-items: center;
         box-shadow: 0px 0px 10px 0px #DBD6D5;
         background-color: white;
+        cursor: pointer;
         @include text-style(24);
+        transition: opacity 0.3s;
 
         &--xs {
             width: 13.4rem;
@@ -507,7 +565,7 @@ body {
 }
 
 .oil-create {
-    padding-inline: 2.4rem;
+    @include inline-padding;
     padding-bottom: 20rem;
 
     &__title {
@@ -543,10 +601,29 @@ body {
         grid-auto-rows: max-content;
         gap: .8rem;
     }
+
+    .main-image {
+        position: relative;
+        aspect-ratio: 1;
+
+        img {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 16px;
+            pointer-events: none;
+            opacity: 1;
+            clip-path: inset(100% 0 0 0);
+            transition: clip-path 0.5s cubic-bezier(.7, .4, .15, 1);
+            z-index: 1;
+        }
+    }
 }
 
 .family-history {
-    padding-inline: 2.4rem;
+    @include inline-padding;
     margin-bottom: 20rem;
 
     .swiper-slide {
