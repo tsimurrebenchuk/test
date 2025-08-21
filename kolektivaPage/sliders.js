@@ -8,10 +8,11 @@ function initSlider(parentContainer, navigationContainer) {
     const totalEl = navBlock.querySelector('.total');
 
     new Swiper(parentContainer, {
-        slidesPerView: 1.1,
+        slidesPerView: 1.4,
         spaceBetween: 8,
         slidesOffsetBefore: 24,
         slidesOffsetAfter: 24,
+        centeredSlides: true,
         breakpoints: {
             768: {
                 slidesPerView: 1.5,
@@ -19,6 +20,7 @@ function initSlider(parentContainer, navigationContainer) {
             1199: {
                 slidesPerView: 'auto',
                 spaceBetween: 16,
+                centeredSlides: false,
             },
         },
         navigation: {
@@ -46,3 +48,25 @@ function updateCounter(swiper, { currentEl, totalEl }) {
     totalEl.textContent = String(total);
 }
 
+// recepi slider
+new Swiper('.js-premium-recipes-swiper', {
+    slidesPerView: 1.1,
+    spaceBetween: 8,
+    slidesOffsetBefore: 16,
+    slidesOffsetAfter: 16,
+    breakpoints: {
+        768: {
+            slidesPerView: 1.5,
+        },
+        1199: {
+            slidesPerView: 'auto',
+            spaceBetween: 16,
+            slidesOffsetBefore: 24,
+            slidesOffsetAfter: 24,
+        },
+    },
+    scrollbar: {
+        el: '.swiper-scrollbar',
+        draggable: true,
+    },
+});
