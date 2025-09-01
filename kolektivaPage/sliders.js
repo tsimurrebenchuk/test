@@ -1,6 +1,6 @@
 
 // age silder
-function initSlider(parentContainer, navigationContainer) {
+function initSlider(parentContainer, navigationContainer, swiperPagination) {
     const navBlock = document.querySelector(navigationContainer);
     const prevBtn = navBlock.querySelector('.prev');
     const nextBtn = navBlock.querySelector('.next');
@@ -8,19 +8,21 @@ function initSlider(parentContainer, navigationContainer) {
     const totalEl = navBlock.querySelector('.total');
 
     new Swiper(parentContainer, {
-        slidesPerView: 1.4,
-        spaceBetween: 8,
-        slidesOffsetBefore: 24,
-        slidesOffsetAfter: 24,
         centeredSlides: true,
+        slidesPerView: 1,
+        spaceBetween: 8,
         breakpoints: {
             768: {
+                slidesOffsetAfter: 24,
+                slidesOffsetBefore: 24,
                 slidesPerView: 1.5,
             },
             1199: {
+                centeredSlides: false,
+                slidesOffsetAfter: 24,
+                slidesOffsetBefore: 24,
                 slidesPerView: 'auto',
                 spaceBetween: 16,
-                centeredSlides: false,
             },
         },
         navigation: {
@@ -30,12 +32,12 @@ function initSlider(parentContainer, navigationContainer) {
         on: {
             init: self => updateCounter(self, { currentEl, totalEl }),
             slideChange: self => updateCounter(self, { currentEl, totalEl }),
+        },
+        pagination: {
+            el: swiperPagination,
         }
     });
 }
-
-initSlider('.js-age-slider', '.js-age-slide-counter');
-initSlider('.js-family-history-slider', '.js-history-slide-counter');
 
 function updateCounter(swiper, { currentEl, totalEl }) {
     const current = swiper.realIndex + 1;
@@ -47,6 +49,10 @@ function updateCounter(swiper, { currentEl, totalEl }) {
     currentEl.textContent = String(current);
     totalEl.textContent = String(total);
 }
+
+initSlider('.js-age-slider', '.js-age-slide-counter', '.js-age-pagination');
+initSlider('.js-family-history-slider', '.js-history-slide-counter');
+
 
 // recepi slider
 new Swiper('.js-premium-recipes-swiper', {
