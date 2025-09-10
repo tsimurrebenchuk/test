@@ -278,6 +278,27 @@ let isPageLoad = false;
 const frames = [];
 let loaded = 0;
 
+async function loadImagesWithPool(totalFrames, imagesSrcPath, poolSize = 8) {
+    let nextIndex = 0;
+
+    async function loadOne(index) {
+        const path = `${imagesSrcPath}/${index.toString().padStart(4, "0")}.webp`;
+        const img = await fetch(path)
+            .then(res => res.blob())
+            .then(blob => createImageBitmap(blob));
+        frames[index] = img;
+        return index;
+    }
+
+    const pool = Array(poolSize).fill(null).map(async function initPool() {
+        while (nextIndex < totalFrames) {
+            const current = nextIndex++;
+            await loadOne(current);
+        }
+    });
+    await Promise.all(pool);
+}
+
 // загрузка картинок отличается в зависимости от устройства
 if (isHeroMobile) {
     function loadImage() {
@@ -297,33 +318,9 @@ if (isHeroMobile) {
 } else {
     async function preloadFrames(batchSize = 60) {
         lockScroll();
-        try {
-            for (let i = 0; i < totalFrames; i += batchSize) {
-                const batch = [];
-
-                for (let j = i; j < i + batchSize && j < totalFrames; j++) {
-                    const path = `${imagesSrcPath}/${j.toString().padStart(4, "0")}.webp`;
-                    const img = fetch(path)
-                        .then(res => res.blob())
-                        .then(blob => createImageBitmap(blob));
-                    batch.push(img);
-                }
-
-                const loadedFrames = await Promise.all(batch);
-
-                for (let j = 0; j < loadedFrames.length; j++) {
-                    frames[i + j] = loadedFrames[j];
-                }
-
-                if (frames.length > batchSize && !isPageLoad) {
-                    isPageLoad = true;
-                    unlockScroll();
-                    updateFrame(0);
-                }
-            }
-        } catch (e) {
-            console.error("Ошибка preloadFrames: " + e);
-        }
+        await loadImagesWithPool(totalFrames, imagesSrcPath, 8);
+        unlockScroll();
+        updateFrame(0);
     }
     preloadFrames()
 }
