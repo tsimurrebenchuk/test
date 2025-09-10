@@ -1457,7 +1457,9 @@ p {
         gap: 32px;
 
         width: 687px;
-        height: 800px;
+        height: calc(100dvh - 300px);
+        min-height: 670px;
+        max-height: 800px;
         padding: 24px 24px 32px;
         background-color: white;
         border-radius: 18px;
@@ -1465,6 +1467,7 @@ p {
         @include device(tablet) {
             width: auto;
             height: 400px;
+            min-height: unset;
             gap: 24px;
             padding: 16px;
         }
@@ -1500,7 +1503,6 @@ p {
 
             font-family: $arno-font;
             font-style: italic;
-            @include font-clamp(1.6rem, 2rem);
             line-height: 20px;
             letter-spacing: 0%;
 
