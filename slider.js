@@ -19,5 +19,3 @@ new Swiper('.js-premium-recipes-swiper', {
         draggable: true,
     },
 });
-
-console.log('swiper')
