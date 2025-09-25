@@ -8,6 +8,18 @@ new Swiper('.js-premium-recipes-swiper', {
             slidesPerView: 1.5,
         },
         1199: {
+            slidesPerView: 2.3,
+            spaceBetween: 16,
+            slidesOffsetBefore: 24,
+            slidesOffsetAfter: 24,
+        },
+        1440: {
+            slidesPerView: 2.7,
+            spaceBetween: 16,
+            slidesOffsetBefore: 24,
+            slidesOffsetAfter: 24,
+        },
+        1660: {
             slidesPerView: 'auto',
             spaceBetween: 16,
             slidesOffsetBefore: 24,

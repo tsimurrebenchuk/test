@@ -1173,18 +1173,31 @@ p {
 }
 
 .premium__video {
+    position: relative;
+    margin-top: 200px;
+
+    @include device(tablet) {
+        margin-top: 0;
+    }
+
     .video {
         height: 100vh;
-        margin-top: 200px;
         object-fit: cover;
         width: 100%;
+    }
 
-        @include device(tablet) {
-            margin-top: 0;
-        }
+    &-text {
+        position: absolute;
+        inset: 0;
+        display: grid;
+        place-items: center;
+        text-align: center;
+        color: white;
+        background-color: rgba(34, 34, 34, .7);
+
+        @include text-style(64);
     }
 }
-
 
 @mixin grid-column-mobile {
     display: grid;
