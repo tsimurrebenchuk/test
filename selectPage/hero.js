@@ -5,16 +5,18 @@ const ctx = canvas.getContext("2d");
 const isHeroMobile = window.innerWidth < 1024;
 
 const setCanvasSize = () => {
-    const baseWidth = window.innerWidth;
-    const baseHeight = isHeroMobile ? Math.round(baseWidth * 1600 / 720) : Math.round(baseWidth * 9 / 16);
+	const baseWidth = window.innerWidth;
+	const baseHeight = isHeroMobile ? Math.round(baseWidth * 1600 / 720) : Math.round(baseWidth * 9 / 16);
 
-    canvas.width = baseWidth;
-    canvas.height = baseHeight;
+	// Use devicePixelRatio for sharper rendering while avoiding massive buffers
+	const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
+	canvas.width = Math.round(baseWidth * dpr);
+	canvas.height = Math.round(baseHeight * dpr);
 
-    canvas.style.width = baseWidth + 'px';
-    canvas.style.height = baseHeight + 'px';
+	canvas.style.width = baseWidth + 'px';
+	canvas.style.height = baseHeight + 'px';
 
-    ctx.setTransform(1, 0, 0, 1, 0, 0);
+	ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 };
 
 // ==== Utils ====
@@ -282,64 +284,121 @@ const totalFrames = 241;
 // const imagesSrcPath = isHeroMobile ? '../local/templates/greek/img/components/premium/heroMob' : '../local/templates/greek/img/components/premium/hero';
 const imagesSrcPath = isHeroMobile ? 'selectPage/heroMob' : 'hero1980';
 let isPageLoad = false;
-const frames = [];
-let loaded = 0;
 
-// загрузка картинок отличается в зависимости от устройства
-if (isHeroMobile) {
-    function loadImage() {
-        for (let i = initialFrame; i < totalFrames; i++) {
-            const img = new Image();
-            img.src = `/${imagesSrcPath}/${String(i).padStart(4, 0)}.webp`;
-            img.onload = () => {
-                loaded++;
-                if (loaded === totalFrames) updateFrame(0);
-            };
-            frames.push(img);
-        }
-        console.log("%cВсе кадры загружены", "color: green; font-weight: bold;");
-        isPageLoad = true;
-    }
-    loadImage()
-} else {
-    async function preloadFrames(batchSize = 60) {
-        lockScroll();
-        try {
-            for (let i = 0; i < totalFrames; i += batchSize) {
-                const batch = [];
+// Optimized frame loader with prioritization and limited concurrency
+const frames = new Array(totalFrames);
+const inFlight = new Map(); // idx -> Promise
+const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+const MAX_CONCURRENCY = (() => {
+	if (!connection) return 6;
+	const type = connection.effectiveType || '';
+	if (type.includes('2g')) return 2;
+	if (type.includes('3g')) return 4;
+	return 8;
+})();
+let activeLoads = 0;
+const queue = [];
 
-                for (let j = i; j < i + batchSize && j < totalFrames; j++) {
-                    const path = `${imagesSrcPath}/${j.toString().padStart(4, "0")}.webp`;
-                    const img = fetch(path)
-                        .then(res => res.blob())
-                        .then(blob => createImageBitmap(blob));
-                    batch.push(img);
-                }
-
-                const loadedFrames = await Promise.all(batch);
-
-                for (let j = 0; j < loadedFrames.length; j++) {
-                    frames[i + j] = loadedFrames[j];
-                }
-
-                if (frames.length > batchSize && !isPageLoad) {
-                    isPageLoad = true;
-                    unlockScroll();
-                    updateFrame(0);
-                }
-            }
-        } catch (e) {
-            console.error("Ошибка preloadFrames: " + e);
-        }
-    }
-    preloadFrames()
+function getFramePath(i) {
+	return `${imagesSrcPath}/${String(i).padStart(4, '0')}.webp`;
 }
 
-function updateFrame(idx) {
-    if (!idx) return;
+function enqueue(index, priority = false) {
+	if (index < 0 || index >= totalFrames) return;
+	if (frames[index]) return;
+	if (inFlight.has(index)) return;
+	if (priority) {
+		queue.unshift(index);
+	} else {
+		queue.push(index);
+	}
+	processQueue();
+}
 
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.drawImage(frames[idx], 0, 0, canvas.width, canvas.height);
+async function fetchAsBitmap(path) {
+	const res = await fetch(path, { credentials: 'same-origin' });
+	const blob = await res.blob();
+	if ("createImageBitmap" in window) {
+		return await createImageBitmap(blob);
+	}
+	return await new Promise((resolve, reject) => {
+		const img = new Image();
+		img.onload = () => resolve(img);
+		img.onerror = reject;
+		img.src = URL.createObjectURL(blob);
+	});
+}
+
+function loadFrame(index) {
+	if (frames[index]) return Promise.resolve(frames[index]);
+	if (inFlight.has(index)) return inFlight.get(index);
+	const path = getFramePath(index);
+	const p = fetchAsBitmap(path)
+		.then(image => {
+			frames[index] = image;
+			inFlight.delete(index);
+			return image;
+		})
+		.catch(err => {
+			inFlight.delete(index);
+			throw err;
+		});
+	inFlight.set(index, p);
+	return p;
+}
+
+function processQueue() {
+	while (activeLoads < MAX_CONCURRENCY && queue.length > 0) {
+		const idx = queue.shift();
+		if (frames[idx] || inFlight.has(idx)) continue;
+		activeLoads++;
+		loadFrame(idx)
+			.catch(() => {})
+			.finally(() => {
+				activeLoads--;
+				if ('requestIdleCallback' in window) {
+					requestIdleCallback(() => processQueue());
+				} else {
+					setTimeout(processQueue, 0);
+				}
+			});
+	}
+}
+
+function primeInitialFrames() {
+	lockScroll();
+	// Paint first frame ASAP
+	loadFrame(0)
+		.then(() => {
+			updateFrame(0);
+			if (!isPageLoad) {
+				isPageLoad = true;
+				unlockScroll();
+			}
+		})
+		.finally(() => {
+			// Warm up the next frames sequentially by proximity
+			const order = [];
+			for (let i = 1; i < totalFrames; i++) order.push(i);
+			order.forEach(i => enqueue(i));
+		});
+}
+
+function prefetchAround(index, radius = isHeroMobile ? 6 : 12) {
+	for (let r = 1; r <= radius; r++) {
+		enqueue(index + r, true);
+		enqueue(index - r, true);
+	}
+}
+
+primeInitialFrames();
+
+function updateFrame(idx) {
+	if (idx < 0 || idx >= totalFrames) return;
+	const frame = frames[idx];
+	if (!frame) return; // not ready yet
+	ctx.clearRect(0, 0, canvas.width, canvas.height);
+	ctx.drawImage(frame, 0, 0, canvas.width, canvas.height);
 }
 
 gsap.registerPlugin(ScrollTrigger);
@@ -378,7 +437,16 @@ ScrollTrigger.create({
             Math.floor(self.progress * totalFrames)
         );
 
-        updateFrame(frameIndex);
+		// Draw if ready, otherwise ensure it's loading and try nearest previous cached frame
+		if (frames[frameIndex]) {
+			updateFrame(frameIndex);
+		} else {
+			enqueue(frameIndex, true);
+			for (let i = frameIndex - 1; i >= 0; i--) {
+				if (frames[i]) { updateFrame(i); break; }
+			}
+		}
+		prefetchAround(frameIndex);
 
         // 1. Находим активный фрагмент по frameIndex
         let sectionIndex = fragments.findIndex(
