@@ -313,6 +313,11 @@ function onLoadingComplete() {
       opacity: 0,
       duration: 1.2,
       ease: "power2.inOut",
+      onStart: () => {
+        loaderEl.style.pointerEvents = "none";
+        document.documentElement.classList.remove("stop-scrolling");
+        document.body.classList.remove("stop-scrolling");
+      },
     },
     "-=0.2",
   );
