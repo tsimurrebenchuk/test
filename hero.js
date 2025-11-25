@@ -278,64 +278,103 @@ let isPageLoad = false;
 const frames = [];
 let loaded = 0;
 
+// Loader logic
+const loaderEl = document.getElementById("site-loader");
+function updateLoader() {
+  loaded++;
+
+  if (loaded === totalFrames) {
+    onLoadingComplete();
+  }
+}
+function onLoadingComplete() {
+  console.log("Loading complete.");
+  isPageLoad = true;
+  updateFrame(0);
+
+  const tl = gsap.timeline({
+    onComplete: () => {
+      loaderEl.style.display = "none";
+      document.documentElement.classList.remove("stop-scrolling");
+      document.body.classList.remove("stop-scrolling");
+      ScrollTrigger.refresh();
+    },
+  });
+
+  tl.to(".spinner", {
+    opacity: 0,
+    duration: 0.5,
+    ease: "power2.inOut",
+  });
+
+  tl.to(
+    loaderEl,
+    {
+      opacity: 0,
+      duration: 1.2,
+      ease: "power2.inOut",
+    },
+    "-=0.2",
+  );
+}
+
 // загрузка картинок отличается в зависимости от устройства
 if (isHeroMobile) {
-    function loadImage() {
-        for (let i = initialFrame; i < totalFrames; i++) {
-            const img = new Image();
-            img.src = `/${imagesSrcPath}/${String(i).padStart(4, 0)}.webp`;
-            img.onload = () => {
-                loaded++;
-                if (loaded === totalFrames) updateFrame(0);
-            };
-            frames.push(img);
-        }
-        console.log("%cВсе кадры загружены", "color: green; font-weight: bold;");
-        isPageLoad = true;
+  function loadImage() {
+    for (let i = initialFrame; i < totalFrames; i++) {
+      const img = new Image();
+      img.src = `/${imagesSrcPath}/${String(i).padStart(4, 0)}.webp`;
+      img.onload = () => {
+        frames[i] = img;
+        updateLoader();
+      };
+      img.onerror = () => {
+        console.log("error frame " + i);
+        updateLoader();
+      };
     }
-    loadImage()
+  }
+  loadImage();
 } else {
-    async function preloadFrames(batchSize = 60) {
-        lockScroll();
-        try {
-            for (let i = 0; i < totalFrames; i += batchSize) {
-                const batch = [];
+  async function preloadFrames(batchSize = 60) {
+    try {
+      for (let i = 0; i < totalFrames; i += batchSize) {
+        const batch = [];
 
-                for (let j = i; j < i + batchSize && j < totalFrames; j++) {
-                    const path = `${imagesSrcPath}/${j.toString().padStart(4, "0")}.webp`;
-                    const img = fetch(path)
-                        .then(res => res.blob())
-                        .then(blob => createImageBitmap(blob));
-                    batch.push(img);
-                }
-
-                const loadedFrames = await Promise.all(batch);
-
-                for (let j = 0; j < loadedFrames.length; j++) {
-                    frames[i + j] = loadedFrames[j];
-                }
-
-                if (frames.length > batchSize && !isPageLoad) {
-                    isPageLoad = true;
-                    unlockScroll();
-                    updateFrame(0);
-                }
-            }
-        } catch (e) {
-            console.error("Ошибка preloadFrames: " + e);
+        for (let j = i; j < i + batchSize && j < totalFrames; j++) {
+          const path = `${imagesSrcPath}/${j.toString().padStart(4, "0")}.webp`;
+          const img = fetch(path)
+            .then((res) => res.blob())
+            .then((blob) => createImageBitmap(blob))
+            .then((bitmap) => {
+              frames[j] = bitmap;
+              updateLoader();
+              return bitmap;
+            });
+          batch.push(img);
         }
+        await Promise.all(batch);
+      }
+    } catch (e) {
+      console.error("Ошибка preloadFrames: " + e);
+      if (!isPageLoad) onLoadingComplete();
     }
-    preloadFrames()
+  }
+  preloadFrames();
 }
 
 function updateFrame(idx) {
-    if (!idx) return;
+    if (frames[idx] === undefined) return;
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.drawImage(frames[idx], 0, 0, canvas.width, canvas.height);
 }
 
 gsap.registerPlugin(ScrollTrigger);
+ScrollTrigger.normalizeScroll(true);
+ScrollTrigger.config({
+  ignoreMobileResize: true,
+});
 
 const sections = document.querySelectorAll('.section');
 const blockTls = [
@@ -358,6 +397,7 @@ const sectionTLS = Array.from(sections).map((section, i) => {
 
 let isAnimationPlay = false;
 ScrollTrigger.create({
+    id: "hero-scroll",
     trigger: ".video-wrapper",
     start: "top top",
     end: `+=${fragments.length * (isHeroMobile ? 130 : 80)}%`,
@@ -416,26 +456,4 @@ function progressBlockValues(values) {
 // EventListener
 document.addEventListener("DOMContentLoaded", () => {
     setCanvasSize();
-}, { once: true });
-
-window.addEventListener("visibilitychange", () => {
-    if (document.visibilityState === "visible") {
-        ScrollTrigger.refresh(true); // true - форсить пересчёт размеров/пинов
-        ScrollTrigger.update();
-    }
 });
-
-window.addEventListener('resize', () => {
-    ScrollTrigger.refresh();
-    ScrollTrigger.update();
-});
-
-// ==== Scroll Lock ====
-function lockScroll() {
-    bodyScrollLock.disableBodyScroll(document.body);
-}
-
-function unlockScroll() {
-    bodyScrollLock.enableBodyScroll(document.body);
-    document.body.style.overflowX = 'hidden';
-}

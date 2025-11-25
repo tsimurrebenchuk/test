@@ -1,0 +1,52 @@
+html.stop-scrolling,
+body.stop-scrolling {
+    overflow: hidden !important;
+    height: 100% !important;
+    width: 100% !important;
+    position: fixed !important;
+    touch-action: none;
+
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
+}
+
+html.stop-scrolling::-webkit-scrollbar,
+body.stop-scrolling::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+}
+
+#site-loader {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: #000;
+    z-index: 99999;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.spinner {
+    width: 50px;
+    height: 50px;
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    border-top: 2px solid #fff;
+    border-radius: 50%;
+    opacity: 0;
+    animation: spin 1s linear infinite, fadeIn 1s ease-out forwards;
+    will-change: transform, opacity;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+@keyframes fadeIn {
+    0% { opacity: 0; }
+    100% { opacity: 1; }
+}
