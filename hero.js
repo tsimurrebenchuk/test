@@ -323,7 +323,7 @@ if (isHeroMobile) {
   function loadImage() {
     for (let i = initialFrame; i < totalFrames; i++) {
       const img = new Image();
-      img.src = `/${imagesSrcPath}/${String(i).padStart(4, 0)}.webp`;
+      img.src = `${imagesSrcPath}/${String(i).padStart(4, 0)}.webp`;
       img.onload = () => {
         frames[i] = img;
         updateLoader();
