@@ -287,41 +287,37 @@ function updateLoader() {
     onLoadingComplete();
   }
 }
+let isLoaderRemoved = false;
 function onLoadingComplete() {
-  console.log("Loading complete.");
+  if (isLoaderRemoved) return;
+  isLoaderRemoved = true;
+
   isPageLoad = true;
   updateFrame(0);
 
   const tl = gsap.timeline({
     onComplete: () => {
-      loaderEl.style.display = "none";
+      if (loaderEl) loaderEl.style.display = "none";
       document.documentElement.classList.remove("stop-scrolling");
       document.body.classList.remove("stop-scrolling");
       ScrollTrigger.refresh();
     },
   });
 
-  tl.to(".spinner", {
-    opacity: 0,
-    duration: 0.5,
-    ease: "power2.inOut",
-  });
+  if (loaderEl) loaderEl.style.pointerEvents = "none";
+  document.documentElement.classList.remove("stop-scrolling");
+  document.body.classList.remove("stop-scrolling");
 
-  tl.to(
-    loaderEl,
-    {
-      opacity: 0,
-      duration: 1.2,
-      ease: "power2.inOut",
-      onStart: () => {
-        loaderEl.style.pointerEvents = "none";
-        document.documentElement.classList.remove("stop-scrolling");
-        document.body.classList.remove("stop-scrolling");
-      },
-    },
-    "-=0.2",
-  );
+  tl.to(".spinner", { opacity: 0, duration: 0.5 });
+  tl.to(loaderEl, { opacity: 0, duration: 1.2 }, "-=0.2");
 }
+
+setTimeout(() => {
+  if (!isLoaderRemoved) {
+    console.warn("Loader timeout - force start");
+    onLoadingComplete();
+  }
+}, 6000);
 
 // загрузка картинок отличается в зависимости от устройства
 if (isHeroMobile) {
@@ -376,7 +372,6 @@ function updateFrame(idx) {
 }
 
 gsap.registerPlugin(ScrollTrigger);
-ScrollTrigger.normalizeScroll(true);
 ScrollTrigger.config({
   ignoreMobileResize: true,
 });
