@@ -323,7 +323,7 @@ if (isHeroMobile) {
   function loadImage() {
     for (let i = initialFrame; i < totalFrames; i++) {
       const img = new Image();
-      img.src = `/${imagesSrcPath}/${String(i).padStart(4, 0)}.webp`;
+      img.src = `${imagesSrcPath}/${String(i).padStart(4, 0)}.webp`;
       img.onload = () => {
         frames[i] = img;
         updateLoader();
@@ -372,9 +372,6 @@ function updateFrame(idx) {
 
 gsap.registerPlugin(ScrollTrigger);
 ScrollTrigger.normalizeScroll(true);
-ScrollTrigger.config({
-  ignoreMobileResize: true,
-});
 
 const sections = document.querySelectorAll('.section');
 const blockTls = [
