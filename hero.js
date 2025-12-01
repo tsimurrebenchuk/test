@@ -371,7 +371,6 @@ function updateFrame(idx) {
 }
 
 gsap.registerPlugin(ScrollTrigger);
-ScrollTrigger.normalizeScroll(true);
 
 const sections = document.querySelectorAll('.section');
 const blockTls = [
